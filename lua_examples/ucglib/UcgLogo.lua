@@ -3,13 +3,21 @@ function init_spi_display()
     -- Hardware SPI CLK  = GPIO14
     -- Hardware SPI MOSI = GPIO13
     -- Hardware SPI MISO = GPIO12 (not used)
+    -- Hardware SPI /CS  = GPIO15 (not used)
     -- CS, D/C, and RES can be assigned freely to available GPIOs
     local cs  = 8 -- GPIO15, pull-down 10k to GND
     local dc  = 4 -- GPIO2
     local res = 0 -- GPIO16
+    local bus = 1
 
-    spi.setup(1, spi.MASTER, spi.CPOL_LOW, spi.CPHA_LOW, 8, 8)
-    disp = ucg.st7735_18x128x160_hw_spi(cs, dc, res)
+    spi.setup(bus, spi.MASTER, spi.CPOL_LOW, spi.CPHA_LOW, 8, 8)
+    -- we won't be using the HSPI /CS line, so disable it again
+    gpio.mode(8, gpio.INPUT, gpio.PULLUP)
+
+    -- initialize the matching driver for your display
+    -- see app/include/ucg_config.h
+    --disp = ucg.ili9341_18x240x320_hw_spi(bus, cs, dc, res)
+    disp = ucg.st7735_18x128x160_hw_spi(bus, cs, dc, res)
 end
 
 
@@ -56,7 +64,7 @@ function ic_body(x, y)
     disp:setColor(2, 48, 48, 48)
     disp:setColor(3, 30, 30, 30)
     disp:drawGradientBox(x, y, w, h)
-  
+
     disp:setColor(0, 255, 168, 0)
     --disp:setColor(0, 225, 168, 30)
     disp:drawDisc(x+w-1, y+h/2-1, 7, bit.bor(ucg.DRAW_UPPER_LEFT, ucg.DRAW_LOWER_LEFT))
@@ -71,16 +79,16 @@ end
 
 function draw_ucg_logo()
     local a, b
-  
+
     --ucg_Init(ucg, ucg_sdl_dev_cb, ucg_ext_none, (ucg_com_fnptr)0)
     disp:setFont(ucg.font_ncenB24_tr)
 
     --disp:setRotate270()
     --disp:setClipRange(10,5,40,20)
-  
+
     a = 2
     b = 3
-  
+
     disp:setColor(0, 135*a/b,206*a/b,250*a/b)
     disp:setColor(1, 176*a/b,226*a/b,255*a/b)
     disp:setColor(2, 25*a/b,25*a/b,112*a/b)
@@ -110,7 +118,7 @@ function draw_ucg_logo()
     upper_pin(7+1*14, 4)
     upper_pin(7+2*14, 4)
     upper_pin(7+3*14, 4)
-  
+
     ic_body(2, 10)
 
     lower_pin(7+0*14, 41)
